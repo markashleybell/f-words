@@ -55,83 +55,87 @@ let writeError msg =
 
 [<EntryPoint>]
 let main argv =
-    let basePath = argv.[0]
-
-    writeInfo "Validating configuration and paths"
-
-    let configPath = sprintf @"%s\config.cfg" basePath
-
-    let loadConfig' = loadConfig fileExists readLines
-    let createPaths' = createPaths basePath
-    let validatePaths' = validatePaths directoryExists
-
-    let deleteExisting' path = result {
-        do! deleteExisting "*.html" path
-        do! deleteExisting "*.xml" path
-    }
-
-    let createContent = result {
-        let! configurationData = configPath |> loadConfig'
-        let! configuration = configurationData |> validateConfig
-
-        let pathData = configuration |> createPaths'
-        let! paths = pathData |> validatePaths'
-        
-        let fs = getFileSystem paths.Template_Path
-
-        let createTemplate' = createTemplate readAll fs
-        let getOutputFileName' = getOutputFileName getFileNameWithoutExtension
-        let getRelativeUrl' = getRelativeUrl getFileNameWithoutExtension
-
-        let siteMetadata = configuration |> getSiteMetadata
-
-        let getPageMetadata (path, content) = 
-            parsePageMetadata getOutputFileName' getRelativeUrl' siteMetadata paths path content
-
-        let! pageMetaData = 
-            paths.Content_Path
-            |> getFilesInDirectory "*.md"
-            |> Seq.map (fun filePath -> (filePath, (readAll filePath)))
-            |> Seq.map getPageMetadata
-            |> checkAllOk
-
-        let articleList = pageMetaData |> getArticleList
-
-        let templates = dict [
-            (createTemplate' "article")
-            (createTemplate' "basic")
-            (createTemplate' "home")
-            (createTemplate' "articleindex")
-        ]
-
-        do! paths.Output_Path |> deleteExisting'
-
-        writeInfo (sprintf "Generating HTML from %s" paths.Content_Path)
-
-        pageMetaData
-        |> Seq.filter (fun p -> p.Template = "article")
-        |> Seq.sortByDescending (fun p -> p.Updated.Value)
-        |> Seq.truncate 10 
-        |> createRssFeed siteMetadata 
-        |> writeToFile (sprintf @"%s\rss.xml" paths.Output_Path)
-
-        return! pageMetaData
-                |> Seq.map (fun md -> { md with Article_List = articleList })
-                |> Seq.map (tryRender templates)
-                |> checkAllOk
-    }
-
-    match createContent with
-    | Error errors -> 
-        errors |> Seq.iter writeError
-
-        writeInfo "Done"
+    if argv |> isEmpty then
+        writeError "Please specify a path"
         1
+    else
+        let basePath = argv.[0].TrimEnd([|'\\'|]) 
 
-    | Ok data -> 
-        data |> Seq.iter (fun (md, html) ->
-            writePageHtml md.Output_Path md html
-            writeSuccess (sprintf "  [OK] %s" md.Output_FileName))
+        writeInfo "Validating configuration and paths"
 
-        writeInfo "Done"
-        0
+        let configPath = sprintf @"%s\config.cfg" basePath
+
+        let loadConfig' = loadConfig fileExists readLines
+        let createPaths' = createPaths basePath
+        let validatePaths' = validatePaths directoryExists
+
+        let deleteExisting' path = result {
+            do! deleteExisting "*.html" path
+            do! deleteExisting "*.xml" path
+        }
+
+        let createContent = result {
+            let! configurationData = configPath |> loadConfig'
+            let! configuration = configurationData |> validateConfig
+
+            let pathData = configuration |> createPaths'
+            let! paths = pathData |> validatePaths'
+        
+            let fs = getFileSystem paths.Template_Path
+
+            let createTemplate' = createTemplate readAll fs
+            let getOutputFileName' = getOutputFileName getFileNameWithoutExtension
+            let getRelativeUrl' = getRelativeUrl getFileNameWithoutExtension
+
+            let siteMetadata = configuration |> getSiteMetadata
+
+            let getPageMetadata (path, content) = 
+                parsePageMetadata getOutputFileName' getRelativeUrl' siteMetadata paths path content
+
+            let! pageMetaData = 
+                paths.Content_Path
+                |> getFilesInDirectory "*.md"
+                |> Seq.map (fun filePath -> (filePath, (readAll filePath)))
+                |> Seq.map getPageMetadata
+                |> checkAllOk
+
+            let articleList = pageMetaData |> getArticleList
+
+            let templates = dict [
+                (createTemplate' "article")
+                (createTemplate' "basic")
+                (createTemplate' "home")
+                (createTemplate' "articleindex")
+            ]
+
+            do! paths.Output_Path |> deleteExisting'
+
+            writeInfo (sprintf "Generating HTML from %s" paths.Content_Path)
+
+            pageMetaData
+            |> Seq.filter (fun p -> p.Template = "article")
+            |> Seq.sortByDescending (fun p -> p.Updated.Value)
+            |> Seq.truncate 10 
+            |> createRssFeed siteMetadata 
+            |> writeToFile (sprintf @"%s\rss.xml" paths.Output_Path)
+
+            return! pageMetaData
+                    |> Seq.map (fun md -> { md with Article_List = articleList })
+                    |> Seq.map (tryRender templates)
+                    |> checkAllOk
+        }
+
+        match createContent with
+        | Error errors -> 
+            errors |> Seq.iter writeError
+
+            writeInfo "Done"
+            1
+
+        | Ok data -> 
+            data |> Seq.iter (fun (md, html) ->
+                writePageHtml md.Output_Path md html
+                writeSuccess (sprintf "  [OK] %s" md.Output_FileName))
+
+            writeInfo "Done"
+            0

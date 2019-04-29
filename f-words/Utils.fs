@@ -4,12 +4,15 @@ open System.Text.RegularExpressions
 open System
 open System.Globalization
 open fwords.Types
+open System.Collections.Generic
 
 let inline (=>) a b = a, box b
 
 let isError = function | Ok _ -> None | Error e -> Some e
 
 let isNotError = function | Ok r -> Some r | Error _ -> None
+
+let isEmpty<'a> (arr: IList<'a>) = arr.Count = 0
 
 let formatPageError pageName msg = 
     sprintf "  %s:\n%s" pageName msg
