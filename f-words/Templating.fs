@@ -124,6 +124,8 @@ let languageMap = Map.ofList [
     ("json", (javascript, ""))
     ("python", (python, ""))
     ("html", (html, ""))
+    ("css", (css, ""))
+    ("powershell", (powershell, ""))
 ]
 
 let highlightCode = 
