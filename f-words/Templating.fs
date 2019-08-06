@@ -160,12 +160,12 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
             (block.Tag = BlockTag.FencedCode || block.Tag = BlockTag.IndentedCode) 
                 && (not (base.RenderPlainTextInlines.Peek()))
     
-        let (isFigure, img) =
+        let (isFigure, figureContent) =
             if block.Tag = BlockTag.Paragraph
             then 
                 let content = block.InlineContent
 
-                if content.Tag = InlineTag.Image 
+                if content.Tag = InlineTag.Image || content.Tag = InlineTag.Link
                 then
                     (content.NextSibling = null, Some content)
                 else
@@ -199,11 +199,20 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
             ignoreChildNodes <- true
             if isOpening
             then 
-                match img with
-                | Some i ->
-                    let imgTag = sprintf "<img src=\"%s\" title=\"%s\">" i.TargetUrl i.LiteralContent
+                match figureContent with
+                | Some c ->
+                    let link = if c.Tag = InlineTag.Link then Some c else None
+                    let img = if c.Tag = InlineTag.Link then c.FirstChild else c
+
+                    let imgTag = sprintf "<img src=\"%s\" alt=\"%s\" title=\"%s\">" img.TargetUrl img.LiteralContent img.LiteralContent
+
+                    let tags =
+                        match link with 
+                        | Some l -> sprintf "<a href=\"%s\">%s</a>" l.TargetUrl imgTag
+                        | None -> imgTag
+
                     __.Write("<figure>")
-                    __.Write(imgTag)
+                    __.Write(tags)
                     __.Write("</figure>")
                 | None ->
                     base.WriteBlock(block, isOpening, isClosing, &ignoreChildNodes)
