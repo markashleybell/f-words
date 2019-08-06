@@ -1,4 +1,4 @@
-﻿module fwords.Utils
+module fwords.Utils
 
 open System.Text.RegularExpressions
 open System
@@ -20,6 +20,9 @@ let formatPageError pageName msg =
 let formatOutput msg = 
     sprintf "  - %s" msg
 
+let split (sep: char) (s:string) =
+    s.Split ([|sep|], StringSplitOptions.RemoveEmptyEntries)
+
 let checkAllOk results =
     let errors = results |> Seq.choose isError
     let errorCount = Seq.length errors
@@ -27,14 +30,14 @@ let checkAllOk results =
     | 0 -> Ok (results |> Seq.choose isNotError)
     | _ -> Error errors
 
-let replace (p: string) (r: string) (s: string) =
-    Regex.Replace (s, p, r)
-
-let replaceAndReturn (matcher: Regex) (input: string) =
+let tryMatch (matcher: Regex) (input: string) =
     let m = matcher.Match input
     match m.Success with
-    | true -> (Some m.Groups.[1].Value, matcher.Replace(input, ""))
-    | false -> (None, input)
+    | true -> (Some m)
+    | false -> (None)
+
+let replace (p: Regex) (r: string) (s: string) =
+    p.Replace (s, r)
 
 let parseiso8601date err s = 
     let (parse, dt) = DateTime.TryParseExact (s, "yyyy-MM-dd HH:mm", null, DateTimeStyles.None)

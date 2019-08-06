@@ -1,4 +1,4 @@
-﻿module fwords.Templating
+module fwords.Templating
 
 open DotLiquid.FileSystems
 open DotLiquid
@@ -112,10 +112,21 @@ let stripMetadataHeaders (content: string) =
     |> Seq.map (fun (_, rx) -> rx)
     |> Seq.fold (fun ct rx -> rx.Replace (ct, "")) content
 
-let langDeclarationMatcher = new Regex ("^:::([^\s]+)", RegexOptions.Multiline)
+let langDeclarationMatcher = new Regex (@"^:::([^\{\s]+)(?:\{(.*)\})?", RegexOptions.Multiline)
 
-let getAndStripLanguageDeclaration input =
-    replaceAndReturn langDeclarationMatcher input
+let parseLanguageDeclaration input =
+    let result = tryMatch langDeclarationMatcher input
+    match result with
+    | Some m -> 
+        let types = 
+            if m.Groups.Count > 2 && (not (String.IsNullOrWhiteSpace m.Groups.[2].Value))
+            then Some((m.Groups.[2].Value |> split '|')) 
+            else None
+        Some((m.Groups.[1].Value, types))
+    | None -> None
+
+let stripLanguageDeclaration input =
+    replace langDeclarationMatcher "" input
 
 let languageMap = Map.ofList [
     ("csharp", (csharp, "EventHandler Form DateTime Timer TimeSpan"))
@@ -128,8 +139,18 @@ let languageMap = Map.ofList [
     ("powershell", (powershell, ""))
 ]
 
-let highlightCode = 
-    SyntaxHighlighter.formatCode languageMap
+let getLanguageMap langName (extraTypes: string[] option) = 
+    match extraTypes with
+    | Some et -> 
+        let (l, types) = languageMap.[langName]
+        let ets = et |> String.concat " " 
+        let def = (l, (sprintf "%s %s" types ets))
+        languageMap.Add(langName, def)
+    | None -> languageMap
+
+let highlightCode langName (extraTypes: string[] option) = 
+    let langMap = getLanguageMap langName extraTypes
+    SyntaxHighlighter.formatCode langMap langName 
 
 type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSettings) = 
     inherit HtmlFormatter(target, settings)
@@ -144,13 +165,16 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
             ignoreChildNodes <- false
             if isOpening
             then 
-                // TODO: Get types to be highlighted from code block header
-                let (language, content) = block.StringContent.ToString() |> getAndStripLanguageDeclaration
+                let contentRaw = block.StringContent.ToString()
+
+                let languageDeclaration = contentRaw |> parseLanguageDeclaration
+
+                let content = contentRaw |> stripLanguageDeclaration
 
                 let highlighted = 
-                    match language with
-                    | Some lang -> 
-                        let (processed, regex, code) = content |> highlightCode lang
+                    match languageDeclaration with
+                    | Some (lang, extraTypes) -> 
+                        let (processed, regex, code) = content |> highlightCode lang extraTypes
                         code
                     | None -> System.Net.WebUtility.HtmlEncode content
             
