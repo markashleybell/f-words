@@ -160,6 +160,19 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
             (block.Tag = BlockTag.FencedCode || block.Tag = BlockTag.IndentedCode) 
                 && (not (base.RenderPlainTextInlines.Peek()))
     
+        let (isFigure, img) =
+            if block.Tag = BlockTag.Paragraph
+            then 
+                let content = block.InlineContent
+
+                if content.Tag = InlineTag.Image 
+                then
+                    (content.NextSibling = null, Some content)
+                else
+                    (false, None)
+            else
+                (false, None)
+
         if isCodeBlock
         then
             ignoreChildNodes <- false
@@ -181,6 +194,19 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
                 __.Write("<pre class=\"code\"><code>")
                 __.Write(highlighted)
                 __.Write("</code></pre>")
+        else if isFigure
+        then
+            ignoreChildNodes <- true
+            if isOpening
+            then 
+                match img with
+                | Some i ->
+                    let imgTag = sprintf "<img src=\"%s\" title=\"%s\">" i.TargetUrl i.LiteralContent
+                    __.Write("<figure>")
+                    __.Write(imgTag)
+                    __.Write("</figure>")
+                | None ->
+                    base.WriteBlock(block, isOpening, isClosing, &ignoreChildNodes)
         else
             base.WriteBlock(block, isOpening, isClosing, &ignoreChildNodes)
 

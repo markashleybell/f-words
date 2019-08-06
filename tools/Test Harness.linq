@@ -6,27 +6,34 @@
   <Namespace>CommonMark.Formatters</Namespace>
   <Namespace>CommonMark.Syntax</Namespace>
   <Namespace>fwords.Templating</Namespace>
+  <Namespace>System.Globalization</Namespace>
   <Namespace>System.Runtime.InteropServices</Namespace>
 </Query>
 
 let content = 
-    File.ReadAllText @"C:\Src\markb.uk\content\election-2015-manifesto-mining.md"
+    File.ReadAllText @"C:\Src\markb.uk\content\portable-git-windows-setting-home-environment-variable.md"
 
-let nodeHasTargetUrl (node: EnumeratorEntry) =
-    // node.ToString().Dump()
-    node.IsOpening && node.Inline <> null && node.Inline.TargetUrl <> null
+//let getBodyHtml' = getBodyHtml (transformRelativeLinks' "TEST_CDN")
+//    
+//content 
+//|> getBodyHtml' 
+//|> Dump 
+//|> ignore
 
-let transformRelativeLinks' cdnUrl (doc: Block) =
-    doc.AsEnumerable () 
-    |> Seq.filter nodeHasTargetUrl 
-    |> Seq.iter (fun n -> 
-        if n.Inline.TargetUrl.StartsWith "~"
-        then n.Inline.TargetUrl <- cdnUrl + (n.Inline.TargetUrl.Substring 1))
-    doc
-    
-let getBodyHtml' = getBodyHtml (transformRelativeLinks' "TEST_CDN")
-    
+let markdownSettings = CommonMarkSettings.Default.Clone()
+
+markdownSettings.OutputFormat <- OutputFormat.SyntaxTree
+
+let printDoc doc = 
+    use writer = new System.IO.StringWriter (CultureInfo.CurrentCulture)
+    CommonMarkConverter.ProcessStage3 (doc, writer, markdownSettings)
+    writer.ToString ()
+
 content 
-|> getBodyHtml' 
-|> Dump 
+|> stripMetadataHeaders 
+|> parse 
+|> printDoc
+// |> toHtml 
+|> Dump
 |> ignore
+
