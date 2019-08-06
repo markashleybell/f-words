@@ -8,6 +8,9 @@ open System.Text
 
 let encoding = UTF8Encoding false
 
+let fullPath (path: string) = 
+    Path.GetFullPath (path.TrimEnd([|'\\'|]))
+
 let fileExists path =
     File.Exists path
 
@@ -59,7 +62,7 @@ let main argv =
         writeError "Please specify a path"
         1
     else
-        let basePath = argv.[0].TrimEnd([|'\\'|]) 
+        let basePath = fullPath argv.[0]
 
         writeInfo "Validating configuration and paths"
 
