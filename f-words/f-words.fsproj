@@ -18,7 +18,7 @@
     <ItemGroup>
         <PackageReference Include="CommonMark.NET" Version="0.15.1" />
         <PackageReference Include="DotLiquid" Version="2.0.314" />
-        <PackageReference Include="MAB.SyntaxHighlighter" Version="0.0.4-alpha" />
+        <PackageReference Include="MAB.SyntaxHighlighter" Version="0.0.5-alpha" />
     </ItemGroup>
 
     <ItemGroup>

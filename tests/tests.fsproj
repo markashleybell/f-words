@@ -24,7 +24,7 @@
     <ItemGroup>
         <PackageReference Update="FSharp.Core" Version="4.6.2" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />
-        <PackageReference Include="MAB.SyntaxHighlighter" Version="0.0.4-alpha" />
+        <PackageReference Include="MAB.SyntaxHighlighter" Version="0.0.5-alpha" />
     </ItemGroup>
 
 </Project>
