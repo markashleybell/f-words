@@ -1,4 +1,4 @@
-﻿module fwords.Syndication
+module fwords.Syndication
 
 open System
 open fwords.Types
@@ -24,7 +24,7 @@ let createRssFeedItem (page: Page) =
         ((DateTimeOffset(page.Updated.Value, TimeSpan.Zero)).ToUnixTimeSeconds())
         (toRfc1123String (DateTimeOffset(page.Updated.Value, TimeSpan.Zero)))
 
-let createRssFeed (metaData: SiteMetadata) pages = 
+let createRssFeed (metaData: SiteMetadata) pages =
     let items = pages |> Seq.map (createRssFeedItem) |> String.concat ""
 
     sprintf """<?xml version="1.0" encoding="utf-8"?>
@@ -36,10 +36,10 @@ let createRssFeed (metaData: SiteMetadata) pages =
         <lastBuildDate>%s</lastBuildDate>
         <atom:link href="%s/rss.xml" rel="self" type="application/rss+xml" />
 %s    </channel>
-</rss>""" 
-        metaData.Site_Name 
-        metaData.Site_Url 
-        metaData.Rss_Description 
+</rss>"""
+        metaData.Site_Name
+        metaData.Site_Url
+        metaData.Rss_Description
         (toRfc1123String (DateTimeOffset(DateTime.Now)))
         metaData.Site_Url
         items

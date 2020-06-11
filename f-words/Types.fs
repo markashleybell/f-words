@@ -1,4 +1,4 @@
-﻿module fwords.Types
+module fwords.Types
 
 open System
 open DotLiquid
@@ -27,7 +27,7 @@ type Page = {
     Document_Class: string
     Template: string
 
-    // I really don't like this... but DotLiquid doesn't support 
+    // I really don't like this... but DotLiquid doesn't support
     // F# option types, so we don't have a lot of choice
     Published: Nullable<DateTime>
     Updated: Nullable<DateTime>

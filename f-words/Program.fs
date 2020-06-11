@@ -1,4 +1,4 @@
-﻿open System
+open System
 open fwords.Types
 open fwords.Utils
 open fwords.Templating
@@ -8,7 +8,7 @@ open System.Text
 
 let encoding = UTF8Encoding false
 
-let fullPath (path: string) = 
+let fullPath (path: string) =
     Path.GetFullPath (path.TrimEnd([|'\\'|]))
 
 let fileExists path =
@@ -20,7 +20,7 @@ let readAll path =
 let readLines path =
     File.ReadAllLines path
 
-let getFileNameWithoutExtension path =
+let getFileNameWithoutExtension (path: string) =
     Path.GetFileNameWithoutExtension path
 
 let getFilesInDirectory pattern path =
@@ -83,7 +83,7 @@ let main argv =
 
             let pathData = configuration |> createPaths'
             let! paths = pathData |> validatePaths'
-        
+
             let fs = getFileSystem paths.Template_Path
 
             let createTemplate' = createTemplate readAll fs
@@ -92,10 +92,10 @@ let main argv =
 
             let siteMetadata = configuration |> getSiteMetadata
 
-            let getPageMetadata (path, content) = 
+            let getPageMetadata (path, content) =
                 parsePageMetadata getOutputFileName' getRelativeUrl' siteMetadata paths path content
 
-            let! pageMetaData = 
+            let! pageMetaData =
                 paths.Content_Path
                 |> getFilesInDirectory "*.md"
                 |> Seq.map (fun filePath -> (filePath, (readAll filePath)))
@@ -118,8 +118,8 @@ let main argv =
             pageMetaData
             |> Seq.filter (fun p -> p.Template = "article")
             |> Seq.sortByDescending (fun p -> p.Updated.Value)
-            |> Seq.truncate 10 
-            |> createRssFeed siteMetadata 
+            |> Seq.truncate 10
+            |> createRssFeed siteMetadata
             |> writeToFile (sprintf @"%s\rss.xml" paths.Output_Path)
 
             return! pageMetaData
@@ -129,13 +129,13 @@ let main argv =
         }
 
         match createContent with
-        | Error errors -> 
+        | Error errors ->
             errors |> Seq.iter writeError
 
             writeInfo "Done"
             1
 
-        | Ok data -> 
+        | Ok data ->
             data |> Seq.iter (fun (md, html) ->
                 writePageHtml md.Output_Path md html
                 writeSuccess (sprintf "  [OK] %s" md.Output_FileName))

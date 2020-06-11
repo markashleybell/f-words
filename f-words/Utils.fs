@@ -14,10 +14,10 @@ let isNotError = function | Ok r -> Some r | Error _ -> None
 
 let isEmpty<'a> (arr: IList<'a>) = arr.Count = 0
 
-let formatPageError pageName msg = 
+let formatPageError pageName msg =
     sprintf "  %s:\n%s" pageName msg
 
-let formatOutput msg = 
+let formatOutput msg =
     sprintf "  - %s" msg
 
 let split (sep: char) (s:string) =
@@ -39,7 +39,7 @@ let tryMatch (matcher: Regex) (input: string) =
 let replace (p: Regex) (r: string) (s: string) =
     p.Replace (s, r)
 
-let parseiso8601date err s = 
+let parseiso8601date err s =
     let (parse, dt) = DateTime.TryParseExact (s, "yyyy-MM-dd HH:mm", null, DateTimeStyles.None)
     match parse with
     | false -> err
@@ -54,7 +54,7 @@ let asConfigValue (s: string) =
 let asErrors (l: string list) =
     Error (l |> Seq.ofList)
 
-let loadConfig fileExists readLines fileName = 
+let loadConfig fileExists readLines fileName =
     try
         let exists = fileName |> fileExists
         match exists with
@@ -62,10 +62,10 @@ let loadConfig fileExists readLines fileName =
             let msg = sprintf "Couldn't find a configuration at %s" fileName
             [formatOutput msg] |> asErrors
         | true ->
-            let configValues = 
-                fileName 
-                |> readLines 
-                |> Seq.map asConfigValue 
+            let configValues =
+                fileName
+                |> readLines
+                |> Seq.map asConfigValue
                 |> Map.ofSeq
             Ok configValues
     with
@@ -84,13 +84,13 @@ let requiredConfigKeys = [
     "output_path"
 ]
 
-let validateConfig (cfg: Map<string, string>) = 
-    requiredConfigKeys 
+let validateConfig (cfg: Map<string, string>) =
+    requiredConfigKeys
     |> Seq.filter (fun k -> not (cfg.ContainsKey k))
     |> Seq.fold (fun msg k -> k::msg) []
     |> (fun s -> match s.Length with
                  | 0 -> Ok cfg
-                 | _ -> Seq.rev s 
+                 | _ -> Seq.rev s
                         |> Seq.map (sprintf "Missing configuration field: %s")
                         |> Seq.map formatOutput
                         |> Seq.toList
@@ -106,15 +106,15 @@ let createPaths basePath (cfg: Map<string, string>) =
     let contentPath = cfg.["content_path"]
     let outputPath = cfg.["output_path"]
 
-    { 
+    {
         Base_Path = basePath
         Template_Path = if templatePath |> isRelative then combine basePath templatePath else templatePath
         Content_Path = if contentPath |> isRelative then combine basePath contentPath else contentPath
         Output_Path = if outputPath |> isRelative then combine basePath outputPath else outputPath
     }
 
-let validatePaths directoryExists (paths: SitePaths) = 
-    let error pathType = 
+let validatePaths directoryExists (paths: SitePaths) =
+    let error pathType =
         sprintf "%s path %s not found" pathType
 
     let pathChecks = [
@@ -123,21 +123,21 @@ let validatePaths directoryExists (paths: SitePaths) =
         (paths.Output_Path, (error "Output"))
     ]
 
-    let results = 
-        pathChecks 
-        |> Seq.map (fun (pth, err) -> 
+    let results =
+        pathChecks
+        |> Seq.map (fun (pth, err) ->
             match (pth |> directoryExists) with
             | false -> Error (formatOutput (err pth))
             | true -> Ok pth)
 
     match (results |> checkAllOk) with
-    | Ok _ -> Ok paths 
+    | Ok _ -> Ok paths
     | Error errors -> Error errors
-    
+
 
 type ResultBuilder() =
     member __.Return(x) = Ok x
     member __.ReturnFrom(m: Result<_, _>) = m
     member __.Bind(m, f) = Result.bind f m
-    
+
 let result = ResultBuilder()

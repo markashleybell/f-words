@@ -26,7 +26,7 @@ let getSiteMetadata (cfg: Map<string, string>): SiteMetadata =
         Disqus_Id = cfg.["disqus_id"]
     }
 
-let metadataRegexOptions = 
+let metadataRegexOptions =
     RegexOptions.IgnoreCase ||| RegexOptions.Multiline ||| RegexOptions.Compiled
 
 let metadataMatcher name =
@@ -43,35 +43,35 @@ let templateHeader = metadataMatcher "Template"
 let documentClassHeader = metadataMatcher "DocumentClass"
 
 let formatLiquidExceptionList errors =
-    errors 
-    |> Seq.map (fun (e: exn) -> Regex.Replace(e.Message, "(Liquid )?Error - ", "")) 
+    errors
+    |> Seq.map (fun (e: exn) -> Regex.Replace(e.Message, "(Liquid )?Error - ", ""))
     |> Seq.map (fun msg -> sprintf "  %s" (formatOutput msg))
     |> String.concat Environment.NewLine
 
 let getOptionalHeaderValue (matcher: (string * Regex)) content =
     let (_, rx) = matcher
-    rx.Match content 
+    rx.Match content
     |> (fun m -> match m.Success with
                  | true -> Some (m.Groups.[1].Value.Trim())
                  | false -> None)
 
 let getRequiredHeaderValue (matcher: (string * Regex)) content =
     let (headerName, rx) = matcher
-    rx.Match content 
+    rx.Match content
     |> (fun m -> match m.Success with
                  | true -> Ok (m.Groups.[1].Value.Trim())
                  | false -> Error (formatOutput (sprintf "Missing %s header" headerName)))
 
 let getOptionalHeaderValueOrDefault header default' content =
-    let optionalValue = content |> getOptionalHeaderValue header 
+    let optionalValue = content |> getOptionalHeaderValue header
     match optionalValue with
     | Some f -> f
     | None -> default'
 
 let getPageType content =
     match (content |> getOptionalHeaderValue pageTypeHeader) with
-    | Some typ ->  
-        match typ with 
+    | Some typ ->
+        match typ with
         | "static" -> Ok Static
         | _ -> Error (formatOutput "Invalid PageType header value (\"static\" is currently the only valid value)")
     | None -> Ok Article
@@ -85,8 +85,8 @@ let getDateHeaderValue (matcher: (string * Regex)) content =
         return! dateString |> parseDate
     }
 
-let getOutputFileName getFileNameWithoutExtension filePath = 
-    filePath 
+let getOutputFileName getFileNameWithoutExtension filePath =
+    filePath
     |> getFileNameWithoutExtension
     |> sprintf "%s.html"
 
@@ -96,7 +96,7 @@ let getRelativeUrl getFileNameWithoutExtension filePath =
     | "index" -> ""
     | _ -> fileName + ".html"
 
-let stripMetadataHeaders (content: string) = 
+let stripMetadataHeaders (content: string) =
     let matchers = [
         titleHeader
         publishedHeader
@@ -108,7 +108,7 @@ let stripMetadataHeaders (content: string) =
         documentClassHeader
     ]
 
-    matchers 
+    matchers
     |> Seq.map (fun (_, rx) -> rx)
     |> Seq.fold (fun ct rx -> rx.Replace (ct, "")) content
 
@@ -117,10 +117,10 @@ let langDeclarationMatcher = new Regex (@"^:::([^\{\s]+)(?:\{(.*)\})?", RegexOpt
 let parseLanguageDeclaration input =
     let result = tryMatch langDeclarationMatcher input
     match result with
-    | Some m -> 
-        let types = 
+    | Some m ->
+        let types =
             if m.Groups.Count > 2 && (not (String.IsNullOrWhiteSpace m.Groups.[2].Value))
-            then Some((m.Groups.[2].Value |> split '|')) 
+            then Some((m.Groups.[2].Value |> split '|'))
             else None
         Some((m.Groups.[1].Value, types))
     | None -> None
@@ -139,30 +139,30 @@ let languageMap = Map.ofList [
     ("powershell", (powershell, ""))
 ]
 
-let getLanguageMap langName (extraTypes: string[] option) = 
+let getLanguageMap langName (extraTypes: string[] option) =
     match extraTypes with
-    | Some et -> 
+    | Some et ->
         let (l, types) = languageMap.[langName]
-        let ets = et |> String.concat " " 
+        let ets = et |> String.concat " "
         let def = (l, (sprintf "%s %s" types ets))
         languageMap.Add(langName, def)
     | None -> languageMap
 
-let highlightCode langName (extraTypes: string[] option) = 
+let highlightCode langName (extraTypes: string[] option) =
     let langMap = getLanguageMap langName extraTypes
-    SyntaxHighlighter.formatCode langMap langName 
+    SyntaxHighlighter.formatCode langMap langName
 
-type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSettings) = 
+type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSettings) =
     inherit HtmlFormatter(target, settings)
 
     override __.WriteBlock(block, isOpening, isClosing, ignoreChildNodes) =
-        let isCodeBlock = 
-            (block.Tag = BlockTag.FencedCode || block.Tag = BlockTag.IndentedCode) 
+        let isCodeBlock =
+            (block.Tag = BlockTag.FencedCode || block.Tag = BlockTag.IndentedCode)
                 && (not (base.RenderPlainTextInlines.Peek()))
-    
+
         let (isFigure, figureContent) =
             if block.Tag = BlockTag.Paragraph
-            then 
+            then
                 let content = block.InlineContent
 
                 if content.Tag = InlineTag.Image || content.Tag = InlineTag.Link
@@ -177,20 +177,20 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
         then
             ignoreChildNodes <- false
             if isOpening
-            then 
+            then
                 let contentRaw = block.StringContent.ToString()
 
                 let languageDeclaration = contentRaw |> parseLanguageDeclaration
 
                 let content = contentRaw |> stripLanguageDeclaration
 
-                let highlighted = 
+                let highlighted =
                     match languageDeclaration with
-                    | Some (lang, extraTypes) -> 
+                    | Some (lang, extraTypes) ->
                         let (processed, regex, code) = content |> highlightCode lang extraTypes
                         code
                     | None -> System.Net.WebUtility.HtmlEncode content
-            
+
                 __.Write("<pre class=\"code\"><code>")
                 __.Write(highlighted)
                 __.Write("</code></pre>")
@@ -198,7 +198,7 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
         then
             ignoreChildNodes <- true
             if isOpening
-            then 
+            then
                 match figureContent with
                 | Some c ->
                     let link = if c.Tag = InlineTag.Link then Some c else None
@@ -207,7 +207,7 @@ type CustomHtmlFormatter(target: System.IO.TextWriter, settings: CommonMarkSetti
                     let imgTag = sprintf "<img src=\"%s\" alt=\"%s\" title=\"%s\">" img.TargetUrl img.LiteralContent img.LiteralContent
 
                     let tags =
-                        match link with 
+                        match link with
                         | Some l -> sprintf "<a href=\"%s\">%s</a>" l.TargetUrl imgTag
                         | None -> imgTag
 
@@ -234,9 +234,9 @@ let nodeHasTargetUrl (node: EnumeratorEntry) =
     node.IsOpening && node.Inline <> null && node.Inline.TargetUrl <> null
 
 let transformRelativeLinks cdnUrl (doc: Block) =
-    doc.AsEnumerable () 
-    |> Seq.filter nodeHasTargetUrl 
-    |> Seq.iter (fun n -> 
+    doc.AsEnumerable ()
+    |> Seq.filter nodeHasTargetUrl
+    |> Seq.iter (fun n ->
         if n.Inline.TargetUrl.StartsWith "~"
         then n.Inline.TargetUrl <- cdnUrl + (n.Inline.TargetUrl.Substring 1))
     doc
@@ -255,13 +255,13 @@ let parseTemplate readAll (fs: LocalFileSystem) (name: string) =
 let createTemplate readAll fs typ =
     (typ, (parseTemplate readAll fs typ))
 
-let render o (template: Template) = 
+let render o (template: Template) =
     let result = template.Render (Hash.FromAnonymousObject o)
     match template.Errors.Count with
     | 0 -> Ok result
     | _ -> Error template.Errors
 
-let getFileSystem templatePath = 
+let getFileSystem templatePath =
     let fs = LocalFileSystem templatePath
     Template.FileSystem <- fs
     // TODO: Why does the DotLiquid Ruby convention seemingly not work at all?
@@ -273,18 +273,18 @@ let getFileSystem templatePath =
 let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetadata) (sitePaths: SitePaths) (filePath: string) content =
     let r = result {
         let! pageType = content |> getPageType
-        
+
         let! title = content |> getRequiredHeaderValue titleHeader
         let! abstract' = content |> getRequiredHeaderValue abstractHeader
 
         let getBodyHtml' = getBodyHtml (transformRelativeLinks siteMetadata.Cdn2)
 
         let body = content |> getBodyHtml'
-        
+
         let outputFileName = getOutputFileName filePath
         let relativeUrl = getRelativeUrl filePath
         let metatitle = sprintf "%s - %s" title siteMetadata.Site_Name
-        
+
         let thumbnail = content |> getOptionalHeaderValueOrDefault thumbnailHeader "site.png"
         let template = content |> getOptionalHeaderValueOrDefault templateHeader "article"
         let documentClass = content |> getOptionalHeaderValueOrDefault documentClassHeader "html-base"
@@ -292,7 +292,7 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
         let page = {
             Source_FileName = filePath
             Output_FileName = outputFileName
-                
+
             Title = title
             Body = body
             Abstract = abstract'
@@ -304,10 +304,10 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
             Og_Url = relativeUrl
             Document_Class = documentClass
             Template = template
-                
+
             Published = Nullable()
             Updated = Nullable()
-                
+
             Site_Name = siteMetadata.Site_Name
             Site_Url = siteMetadata.Site_Url
             Rss_Description = siteMetadata.Rss_Description
@@ -317,7 +317,7 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
             Disqus_Id = siteMetadata.Disqus_Id
 
             Output_Path = sitePaths.Output_Path
-                
+
             Article_List = []
         }
 
@@ -325,8 +325,8 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
         | Static ->
             return page
         | Article ->
-            // Date fields are mandatory for articles, so even though 
-            // the type fields are optional we call getDateHeaderValue, 
+            // Date fields are mandatory for articles, so even though
+            // the type fields are optional we call getDateHeaderValue,
             // which fails with an error if the header isn't present
             let! published = content |> getDateHeaderValue publishedHeader
             let! updated = content |> getDateHeaderValue updatedHeader
@@ -338,10 +338,10 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
     | Ok md -> Ok md
     | Error e -> Error (formatPageError filePath e)
 
-let getArticleList pageMetaData = 
+let getArticleList pageMetaData =
     pageMetaData
     |> Seq.filter (fun p -> p.Template = "article")
-    |> Seq.map (fun p -> 
+    |> Seq.map (fun p ->
         { ArticleSummary.Title = p.Title
           Abstract = p.Abstract
           Relative_Url = p.Relative_Url
@@ -352,7 +352,7 @@ let getArticleList pageMetaData =
 let tryRender (templates: IDictionary<string, Template>) metaData =
     let r = templates.[metaData.Template] |> render metaData
     match r with
-    | Error e -> 
+    | Error e ->
         Error (formatPageError metaData.Source_FileName (e |> formatLiquidExceptionList))
-    | Ok html -> 
+    | Ok html ->
         Ok (metaData, html)
