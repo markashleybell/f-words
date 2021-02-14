@@ -13,16 +13,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.302
-
     - name: Build
       run: dotnet publish .\f-words\f-words.fsproj --configuration Release
 
     - name: Get Ref Detail
-      uses: markashleybell/actions-get-ref-detail@v1
+      uses: markashleybell/actions-get-ref-detail@v2
       id: ref_detail
 
     - name: Create binary package
