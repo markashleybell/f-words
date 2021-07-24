@@ -22,12 +22,12 @@
 
     <ItemGroup>
         <PackageReference Include="CommonMark.NET" Version="0.15.1" />
-        <PackageReference Include="DotLiquid" Version="2.0.385" />
+        <PackageReference Include="DotLiquid" Version="2.1.488" />
         <PackageReference Include="MAB.SyntaxHighlighter" Version="0.0.5-alpha" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Update="FSharp.Core" Version="4.7.2" />
+        <PackageReference Update="FSharp.Core" Version="5.0.2" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />
     </ItemGroup>
 

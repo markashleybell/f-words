@@ -46,9 +46,11 @@ module TemplatingTests =
     [<Test>]
     let ``Get language map`` () =
         let map = getLanguageMap "csharp" None
-        map.["csharp"] |> should equal (Languages.csharp, "EventHandler Form DateTime Timer TimeSpan")
+        let (_, types) = map.["csharp"]
+        types |> should equal "EventHandler Form DateTime Timer TimeSpan"
 
     [<Test>]
     let ``Get language map with extra types`` () =
         let map = getLanguageMap "csharp" (Some [|"TEST1"; "TEST2"|])
-        map.["csharp"] |> should equal (Languages.csharp, "EventHandler Form DateTime Timer TimeSpan TEST1 TEST2")
+        let (_, types) = map.["csharp"]
+        types |> should equal "EventHandler Form DateTime Timer TimeSpan TEST1 TEST2"
