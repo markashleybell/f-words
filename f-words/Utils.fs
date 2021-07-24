@@ -74,10 +74,6 @@ let loadConfig fileExists readLines fileName =
 let requiredConfigKeys = [
     "site_name"
     "site_url"
-    "cdn1"
-    "cdn2"
-    "analytics_id"
-    "disqus_id"
     "rss_description"
     "template_path"
     "content_path"

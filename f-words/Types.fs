@@ -35,10 +35,6 @@ type Page = {
     Site_Name: string
     Site_Url: string
     Rss_Description: string
-    Cdn1: string
-    Cdn2: string
-    Analytics_Id: string
-    Disqus_Id: string
 
     Output_Path: string
 
@@ -49,10 +45,6 @@ type SiteMetadata = {
     Site_Name: string
     Site_Url: string
     Rss_Description: string
-    Cdn1: string
-    Cdn2: string
-    Analytics_Id: string
-    Disqus_Id: string
 }
 
 type SitePaths = {

@@ -20,10 +20,6 @@ let getSiteMetadata (cfg: Map<string, string>): SiteMetadata =
         Site_Name = cfg.["site_name"]
         Site_Url = cfg.["site_url"]
         Rss_Description = cfg.["rss_description"]
-        Cdn1 = cfg.["cdn1"]
-        Cdn2 = cfg.["cdn2"]
-        Analytics_Id = cfg.["analytics_id"]
-        Disqus_Id = cfg.["disqus_id"]
     }
 
 let metadataRegexOptions =
@@ -277,7 +273,9 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
         let! title = content |> getRequiredHeaderValue titleHeader
         let! abstract' = content |> getRequiredHeaderValue abstractHeader
 
-        let getBodyHtml' = getBodyHtml (transformRelativeLinks siteMetadata.Cdn2)
+        // We can transform link URLs here if required
+        // e.g. (transformRelativeLinks siteMetadata.Site_Url) would prefix all relative URLs with the base site URL
+        let getBodyHtml' = getBodyHtml (fun b -> b)
 
         let body = content |> getBodyHtml'
 
@@ -311,10 +309,6 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
             Site_Name = siteMetadata.Site_Name
             Site_Url = siteMetadata.Site_Url
             Rss_Description = siteMetadata.Rss_Description
-            Cdn1 = siteMetadata.Cdn1
-            Cdn2 = siteMetadata.Cdn2
-            Analytics_Id = siteMetadata.Analytics_Id
-            Disqus_Id = siteMetadata.Disqus_Id
 
             Output_Path = sitePaths.Output_Path
 
