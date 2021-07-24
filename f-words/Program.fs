@@ -66,7 +66,7 @@ let main argv =
 
         writeInfo "Validating configuration and paths"
 
-        let configPath = sprintf @"%s\config.cfg" basePath
+        let configPath = sprintf @"%s\fwords.cfg" basePath
 
         let loadConfig' = loadConfig fileExists readLines
         let createPaths' = createPaths basePath
