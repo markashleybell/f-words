@@ -1,5 +1,5 @@
 <Query Kind="FSharpProgram">
-  <Reference Relative="..\f-words\bin\Debug\net472\fw.exe">C:\Src\f-words\f-words\bin\Debug\net472\fw.exe</Reference>
+  <Reference Relative="..\f-words\bin\Debug\netcoreapp3.1\win-x64\fwords.dll">C:\Src\f-words\f-words\bin\Debug\netcoreapp3.1\win-x64\fwords.dll</Reference>
   <NuGetReference>CommonMark.NET</NuGetReference>
   <NuGetReference>TaskBuilder.fs</NuGetReference>
   <Namespace>CommonMark</Namespace>
@@ -8,6 +8,7 @@
   <Namespace>fwords.Templating</Namespace>
   <Namespace>System.Globalization</Namespace>
   <Namespace>System.Runtime.InteropServices</Namespace>
+  <RuntimeVersion>3.1</RuntimeVersion>
 </Query>
 
 let content = 
