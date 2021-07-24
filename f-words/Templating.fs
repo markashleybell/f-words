@@ -273,9 +273,7 @@ let parsePageMetadata getOutputFileName getRelativeUrl (siteMetadata: SiteMetada
         let! title = content |> getRequiredHeaderValue titleHeader
         let! abstract' = content |> getRequiredHeaderValue abstractHeader
 
-        // We can transform link URLs here if required
-        // e.g. (transformRelativeLinks siteMetadata.Site_Url) would prefix all relative URLs with the base site URL
-        let getBodyHtml' = getBodyHtml (fun b -> b)
+        let getBodyHtml' = getBodyHtml (transformRelativeLinks "")
 
         let body = content |> getBodyHtml'
 
