@@ -12,10 +12,10 @@
 
     <ItemGroup>
         <PackageReference Include="CommonMark.NET" Version="0.15.1" />
-        <PackageReference Include="DotLiquid" Version="2.1.488" />
-        <PackageReference Include="FsUnit" Version="4.0.5" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
-        <PackageReference Include="NUnit3TestAdapter" Version="4.0.0">
+        <PackageReference Include="DotLiquid" Version="2.2.656" />
+        <PackageReference Include="FsUnit" Version="5.0.3" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.2.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Update="FSharp.Core" Version="5.0.2" />
+        <PackageReference Update="FSharp.Core" Version="6.0.5" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="MAB.SyntaxHighlighter" Version="0.0.5-alpha" />
     </ItemGroup>
