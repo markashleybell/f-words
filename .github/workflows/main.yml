@@ -21,7 +21,7 @@ jobs:
         BINARY_PACKAGE_FILENAME: ${{ format('f-words-{0}.zip', github.ref_name) }}
       run: |
         cd "C:\Program Files\7-Zip"
-        .\7z.exe a -tzip $env:GITHUB_WORKSPACE\$env:BINARY_PACKAGE_FILENAME $env:GITHUB_WORKSPACE\f-words\bin\Release\net6\win-x64\publish\* "-xr!*.pdb" "-xr!*.xml"
+        .\7z.exe a -tzip $env:GITHUB_WORKSPACE\$env:BINARY_PACKAGE_FILENAME $env:GITHUB_WORKSPACE\f-words\bin\Release\net6.0\win-x64\publish\* "-xr!*.pdb" "-xr!*.xml"
 
     - name: Create GitHub release
       id: create_release
